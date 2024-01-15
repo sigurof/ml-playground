@@ -32,7 +32,6 @@ import no.sigurof.ml.server.web.common.toDto
 @Serializable
 class SessionDto(
     var id: String,
-    var progress: Int,
     var result: NeuralNetworkDto?,
     var model: Model? = null,
 )
@@ -40,7 +39,6 @@ class SessionDto(
 fun Map.Entry<String, NeuralNetworkServerClientSession>.toDto() =
     SessionDto(
         id = this.key,
-        progress = this.value.progress,
         result = this.value.result?.toDto(),
         model = this.value.model
     )

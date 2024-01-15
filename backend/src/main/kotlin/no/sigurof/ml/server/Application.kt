@@ -34,6 +34,7 @@ class Model(
     val hiddenLayers: List<Int>,
     val sizeDataSet: Int,
     val sizeTestSet: Int,
+    var learningRate: Double,
 )
 
 data class IterativeServerClientSession(
@@ -47,7 +48,6 @@ data class IterativeServerClientSession(
 }
 
 class NeuralNetworkServerClientSession(
-    var progress: Int,
     var result: NeuralNetwork?,
     var model: Model,
 ) {
@@ -57,7 +57,6 @@ class NeuralNetworkServerClientSession(
             baseState: NeuralNetwork?,
         ): NeuralNetworkServerClientSession {
             return NeuralNetworkServerClientSession(
-                progress = 0,
                 model = model,
                 result = baseState
             )

@@ -41,6 +41,7 @@ class CostUpdate(
 class NeuralNetworkBuilder(
     hiddenLayerDimensions: List<Int>,
     trainingData: List<InputVsOutput>,
+    startingCoordinate: DoubleArray? = null,
 ) {
     private val inputLayer = trainingData.first().input.size
     private val outputLayer = trainingData.first().output.size
@@ -54,7 +55,15 @@ class NeuralNetworkBuilder(
         layerSizes.flatten()
             .zipWithNext { nThis, nNext -> NeuralNetworkConnectionSpec(inputs = nThis, outputs = nNext) }
     private val dimensionality = connections.sumOf { it.weights + it.biases }
+    private val startingCoordinate: DoubleArray =
+        startingCoordinate ?: DoubleArray(dimensionality) { Random.nextDouble(-1.0, 1.0) }
     private val trainingDataChunks: List<List<InputVsOutput>> = trainingData.chunked(100)
+
+    constructor(neuralNetwork: NeuralNetwork, trainingData: List<InputVsOutput>) : this(
+        hiddenLayerDimensions = neuralNetwork.layerSizes.drop(1).dropLast(1),
+        trainingData = trainingData,
+        startingCoordinate = neuralNetwork.data
+    )
 
     fun populateWeightsAndBiasesRaw(initMethod: (Int) -> Double) =
         NeuralNetwork(
@@ -67,13 +76,11 @@ class NeuralNetworkBuilder(
         val costUpdate: List<CostUpdate>,
     )
 
-    // coroutine function that returns 1
-
-    fun trainBackProp(): Flow<NeuralNetwork> =
-        trainCoroutine()
+    fun trainBackProp(learningRate: Double): Flow<NeuralNetwork> =
+        trainCoroutine(learningRate = learningRate, startingCoordinate = startingCoordinate)
             .filter { (step, coordinate) -> step % 30 == 0 }
             .map { (step, coordinate) ->
-                val trainingDataChunk = trainingDataChunks[step % trainingDataChunks.size]
+//                val trainingDataChunk = trainingDataChunks[step % trainingDataChunks.size]
                 neuralNetworkOf(coordinate)
             }
 
@@ -105,10 +112,13 @@ class NeuralNetworkBuilder(
             }
         )
 
-    private fun trainCoroutine(): Flow<Pair<Int, DoubleArray>> =
+    private fun trainCoroutine(
+        learningRate: Double,
+        startingCoordinate: DoubleArray,
+    ): Flow<Pair<Int, DoubleArray>> =
         GradientDescent.minimizeCoroutine(
-            learningRate = 10.0,
-            startingCoordinate = DoubleArray(dimensionality) { Random.nextDouble(-1.0, 1.0) },
+            learningRate = learningRate,
+            startingCoordinate = startingCoordinate,
             gradientFunction = { step, weightsVector ->
                 val trainingDataChunk = trainingDataChunks[step % trainingDataChunks.size]
                 BackPropagation.calculateGradient(neuralNetworkOf(weightsVector), trainingDataChunk)

@@ -48,7 +48,20 @@ fun Route.webSocketRoutes() {
                                     is ClientEvent.NewModel -> handleNewModel(event)
                                     is ClientEvent.Continue -> {
                                         nnSessions[sessionId]?.let { session ->
-                                            receiveNeuralNetworkUpdates(session)
+                                            val neuralNetworkBuilder =
+                                                NeuralNetworkBuilder(
+                                                    trainingData = MNIST.inputsVsOutputs(session.model.sizeDataSet),
+                                                    neuralNetwork = session.result!!
+                                                )
+                                            receiveNeuralNetworkUpdates(session, neuralNetworkBuilder)
+                                        } ?: run {
+                                            sendServerEvent(ServerEvent.ClientError("No session with id $sessionId."))
+                                        }
+                                    }
+
+                                    is ClientEvent.SetParameters -> {
+                                        nnSessions[sessionId]?.let { session ->
+                                            session.model.learningRate = event.learningRate
                                         } ?: run {
                                             sendServerEvent(ServerEvent.ClientError("No session with id $sessionId."))
                                         }
@@ -83,18 +96,19 @@ private suspend fun WebSocketServerSession.sendServerEvent(data: ServerEvent) {
     send(Frame.Text(text))
 }
 
-private suspend fun WebSocketServerSession.receiveNeuralNetworkUpdates(session: NeuralNetworkServerClientSession) {
+// TODO I can consider not taking session as an argument here
+private suspend fun WebSocketServerSession.receiveNeuralNetworkUpdates(
+    session: NeuralNetworkServerClientSession,
+    neuralNetworkBuilder: NeuralNetworkBuilder,
+) {
     var i = 0
-    NeuralNetworkBuilder(
-        trainingData = MNIST.inputsVsOutputs(session.model.sizeDataSet),
-        hiddenLayerDimensions = session.model.hiddenLayers
-    ).trainBackProp()
-//        .catch { e -> println("Error: ${e.message}") }
+    neuralNetworkBuilder.trainBackProp(learningRate = session.model.learningRate)
         .collect { neuralNetwork ->
             try {
                 i++
                 val message = "Update $i of 60"
                 println("Sending '$message'")
+                session.result = neuralNetwork // TODO Is this even thread safe?
                 sendServerEvent(ServerEvent.Update(message, neuralNetwork.toDto()))
             } catch (e: Exception) {
                 println("Error: ${e.message}")
@@ -111,7 +125,12 @@ private suspend fun WebSocketServerSession.handleNewModel(event: ClientEvent.New
         sessions[sessionId] =
             NeuralNetworkServerClientSession.new(model = event.model, baseState = null)
         sessions[sessionId]?.let { session ->
-            receiveNeuralNetworkUpdates(session)
+            val neuralNetworkBuilder =
+                NeuralNetworkBuilder(
+                    trainingData = MNIST.inputsVsOutputs(session.model.sizeDataSet),
+                    hiddenLayerDimensions = session.model.hiddenLayers
+                )
+            receiveNeuralNetworkUpdates(session, neuralNetworkBuilder)
         } ?: run {
             sendServerEvent(ServerEvent.ClientError("No session with id $sessionId."))
         }
@@ -127,6 +146,7 @@ internal val webSocketsSerializersModule =
         polymorphic(ClientEvent::class) {
             subclass(ClientEvent.NewModel::class)
             subclass(ClientEvent.Continue::class)
+            subclass(ClientEvent.SetParameters::class)
         }
         polymorphic(ServerEvent::class) {
             subclass(ServerEvent.Update::class)

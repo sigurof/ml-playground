@@ -45,4 +45,15 @@ internal sealed class ClientEvent {
             assertSessionIdNotBlank()
         }
     }
+
+    @Serializable
+    data class SetParameters(
+        override val sessionId: String,
+        val learningRate: Double,
+    ) :
+        ClientEvent() {
+        init {
+            assertSessionIdNotBlank()
+        }
+    }
 }

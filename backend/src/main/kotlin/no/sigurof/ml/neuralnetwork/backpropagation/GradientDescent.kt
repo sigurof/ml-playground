@@ -38,8 +38,7 @@ object GradientDescent {
         var coordinate = startingCoordinate.copyOf()
         var derivative = gradientFunction.invoke(0, coordinate)
         var steps = 0
-        val d = 0.000003
-        while (derivative.length() > d && steps < 5000) {
+        while (true) {
             yield()
             println("steps = $steps, derivative = ${derivative.length()}")
             emit(steps to coordinate)
@@ -54,8 +53,8 @@ object GradientDescent {
             coordinate = newCoordinate
             steps++
         }
-        println("steps = $steps")
-        emit(steps to coordinate)
+//        println("steps = $steps")
+//        emit(steps to coordinate)
     }
 
     fun minimize(
