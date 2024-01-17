@@ -46,7 +46,7 @@ fun Map.Entry<String, NeuralNetworkServerClientSession>.toDto() =
 fun Route.restRoutes() {
     get("/ml/mnist/testData") {
         val numberOfTestSamples = call.request.queryParameters["size"]?.toInt() ?: 10000
-        val inputsOutputs: List<InputVsOutput> = MNIST.inputsVsOutputs(numberOfTestSamples)
+        val inputsOutputs: List<InputVsOutput> = MNIST.getTestData(numberOfTestSamples)
         call.respond(inputsOutputs)
     }
 

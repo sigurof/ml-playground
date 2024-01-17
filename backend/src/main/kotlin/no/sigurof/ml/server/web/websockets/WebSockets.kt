@@ -50,7 +50,7 @@ fun Route.webSocketRoutes() {
                                         nnSessions[sessionId]?.let { session ->
                                             val neuralNetworkBuilder =
                                                 NeuralNetworkBuilder(
-                                                    trainingData = MNIST.inputsVsOutputs(session.model.sizeDataSet),
+                                                    trainingData = MNIST.getTrainingData(session.model.sizeDataSet),
                                                     neuralNetwork = session.result!!
                                                 )
                                             receiveNeuralNetworkUpdates(session, neuralNetworkBuilder)
@@ -127,7 +127,7 @@ private suspend fun WebSocketServerSession.handleNewModel(event: ClientEvent.New
         sessions[sessionId]?.let { session ->
             val neuralNetworkBuilder =
                 NeuralNetworkBuilder(
-                    trainingData = MNIST.inputsVsOutputs(session.model.sizeDataSet),
+                    trainingData = MNIST.getTrainingData(session.model.sizeDataSet),
                     hiddenLayerDimensions = session.model.hiddenLayers
                 )
             receiveNeuralNetworkUpdates(session, neuralNetworkBuilder)

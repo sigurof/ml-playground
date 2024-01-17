@@ -25,15 +25,12 @@ fun startKtorServer() {
         .start(wait = true)
 }
 
-internal val sessions = ConcurrentHashMap<String, IterativeServerClientSession>()
-
 internal val nnSessions = ConcurrentHashMap<String, NeuralNetworkServerClientSession>()
 
 @Serializable
 class Model(
     val hiddenLayers: List<Int>,
     val sizeDataSet: Int,
-    val sizeTestSet: Int,
     var learningRate: Double,
 )
 

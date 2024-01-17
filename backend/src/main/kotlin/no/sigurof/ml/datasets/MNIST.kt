@@ -11,10 +11,23 @@ import no.sigurof.ml.neuralnetwork.InputVsOutput
 object MNIST {
     private const val TRAINING_LABELS_FILE = "./datasets/MNIST/unzipped/train-labels-idx1-ubyte"
     private const val TRAINING_IMAGES_FILE = "./datasets/MNIST/unzipped/train-images-idx3-ubyte"
-    var trainingData: TrainingData? = null
+    private const val TEST_LABELS_FILE = "./datasets/MNIST/unzipped/t10k-labels-idx1-ubyte"
+    private const val TEST_IMAGES_FILE = "./datasets/MNIST/unzipped/t10k-images-idx3-ubyte"
+    private var trainingData: MnistData? = null
+    private var testData: MnistData? = null
 //    var currentSize: Int = 0
 
-    fun inputsVsOutputs(size: Int): List<InputVsOutput> {
+    fun getTestData(size: Int): List<InputVsOutput> {
+        val currentSize = trainingData?.labeledImages?.size ?: 0
+        if (currentSize < size) {
+            loadTestData(size)
+        }
+        return trainingData!!.labeledImages
+            .take(size)
+            .map { it.toInputVsOutput() }
+    }
+
+    fun getTrainingData(size: Int): List<InputVsOutput> {
         val currentSize = trainingData?.labeledImages?.size ?: 0
         if (currentSize < size) {
             loadTrainingData(size)
@@ -41,8 +54,9 @@ object MNIST {
         val trainingImages: List<List<Byte>>,
     )
 
-    private fun trainingLabels(): TrainingLabels {
-        return File(TRAINING_LABELS_FILE)
+    private fun labels(file: String): TrainingLabels {
+//        val file = TRAINING_LABELS_FILE
+        return File(file)
             .inputStream()
             .let { DataInputStream(it) }
             .use { inputStream: DataInputStream ->
@@ -57,9 +71,9 @@ object MNIST {
                 require(magicNumber == 2049) {
                     "Magic number is expected to be 2049, but was $magicNumber."
                 }
-                require(numberOfItems == 60000) {
-                    "Declared number of items is expected to be 60000, but was $numberOfItems."
-                }
+//                require(numberOfItems == 60000) {
+//                    "Declared number of items is expected to be 60000, but was $numberOfItems."
+//                }
                 val labels: ByteArray = inputStream.readBytes()
                 require(labels.size == numberOfItems) {
                     "Declared number of items is expected to be ${labels.size}, but was $numberOfItems."
@@ -74,8 +88,11 @@ object MNIST {
             }
     }
 
-    private fun trainingImages(n: Int): TrainingImages {
-        return File(TRAINING_IMAGES_FILE)
+    private fun trainingImages(
+        n: Int,
+        file: String,
+    ): TrainingImages {
+        return File(file)
             .inputStream()
             .let { DataInputStream(it) }
             .use { inputStream: DataInputStream ->
@@ -92,9 +109,9 @@ object MNIST {
                 require(magicNumber == 2051) {
                     "Magic number is expected to be 2051, but was $magicNumber."
                 }
-                require(numberOfItems == 60000) {
-                    "Declared number of items is expected to be 60000, but was $numberOfItems."
-                }
+//                require(numberOfItems == 60000) {
+//                    "Declared number of items is expected to be 60000, but was $numberOfItems."
+//                }
                 require(numberOfRows == 28) {
                     "Declared number of rows is expected to be 28, but was $numberOfRows."
                 }
@@ -151,20 +168,43 @@ object MNIST {
             )
     }
 
-    class TrainingData(
+    class MnistData(
         val imageRows: Int,
         val imageCols: Int,
         val labeledImages: List<LabeledImage>,
     )
 
-    fun loadTrainingData(n: Int) {
+    fun loadTestData(n: Int) {
         println("Loading $n samples of training data...")
-        this.trainingData = parseTrainingData(n)
+        this.testData = parseData(n, Mode.TEST)
     }
 
-    fun parseTrainingData(n: Int): TrainingData {
-        val labels = trainingLabels().labels.take(n)
-        val (images, rows, cols) = trainingImages(n)
+    fun loadTrainingData(n: Int) {
+        println("Loading $n samples of training data...")
+        this.trainingData = parseData(n, Mode.TRAINING)
+    }
+
+    enum class Mode {
+        TRAINING,
+        TEST,
+    }
+
+    fun parseData(
+        n: Int,
+        mode: Mode,
+    ): MnistData {
+        val labelsFile =
+            when (mode) {
+                Mode.TRAINING -> TRAINING_LABELS_FILE
+                Mode.TEST -> TEST_LABELS_FILE
+            }
+        val imagesFile =
+            when (mode) {
+                Mode.TRAINING -> TRAINING_IMAGES_FILE
+                Mode.TEST -> TEST_IMAGES_FILE
+            }
+        val labels = labels(labelsFile).labels.take(n)
+        val (images, rows, cols) = trainingImages(n, imagesFile)
         val labeledImages =
             labels.zip(images).map { (label, image) ->
                 LabeledImage(
@@ -172,15 +212,11 @@ object MNIST {
                     image = image
                 )
             }
-        return TrainingData(
+        return MnistData(
             imageRows = rows,
             imageCols = cols,
             labeledImages = labeledImages
         )
-//        return Data(
-//            trainingLabels = trainingLabels().labels,
-//            trainingImages = trainingImages().images
-//        )
     }
 
 //    fun bytesToInt(

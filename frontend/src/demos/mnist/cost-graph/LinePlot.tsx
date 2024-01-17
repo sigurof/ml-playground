@@ -5,7 +5,7 @@ import * as d3 from "d3";
 export default function LinePlot({
     data,
     data2,
-    width = 640,
+    width = 400,
     height = 400,
     marginTop = 20,
     marginRight = 20,

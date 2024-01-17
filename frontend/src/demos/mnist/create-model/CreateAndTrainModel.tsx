@@ -1,15 +1,11 @@
 import { RefObject, useEffect, useRef, useState } from "react";
 import { Button, CircularProgress, MenuItem, Select, Slider, TextField, Typography } from "@mui/material";
-import { SectionBox } from "../Common.tsx";
+import { HorizontalLine, SectionBox } from "../Common.tsx";
 import styled from "styled-components";
 import { styled as muiStyled } from "@mui/material/styles";
 import { OverrideDialog } from "./OverrideDialog.tsx";
 import { toast } from "react-toastify";
-import { api, InputVsOutput, ServerEvent, serverEvents, SessionDto, Update } from "../../../api/api.ts";
-
-function valuetext(value: number) {
-    return `${value}°C`;
-}
+import { api, ServerEvent, serverEvents, SessionDto, Update } from "../../../api/api.ts";
 
 const GridContainer = styled.div<{ times: number }>`
     width: 400px;
@@ -45,10 +41,6 @@ const Heading = styled.h2`
     //margin: 0;
 `;
 
-const HorizontalLine = styled.hr`
-    border-top: 2px solid lightgray;
-`;
-
 const ButtonContainer = styled.div`
     display: flex;
     justify-content: right;
@@ -79,7 +71,6 @@ const clientEvents = {
 type Model = {
     hiddenLayers: number[];
     sizeDataSet: number;
-    sizeTestSet: number;
     learningRate: number;
 };
 type NewModel = {
@@ -122,13 +113,11 @@ function parseHiddenLayers(layers: string) {
 
 export const CreateAndTrainModel = ({
     onNeuralNetworkUpdate,
-    onTestDataLoaded,
 }: {
-    onTestDataLoaded: (testData: InputVsOutput[]) => void;
     onNeuralNetworkUpdate: RefObject<(update: Update) => void>;
 }) => {
     const [layers, setLayers] = useState<string>("");
-    const [numTest, setNumTest] = useState<number>(1000);
+
     const [learningRate, setLearningRate] = useState<number>(1.0);
     const [numTraining, setNumTraining] = useState<number>(4000);
     const [running, setRunning] = useState(false);
@@ -175,7 +164,6 @@ export const CreateAndTrainModel = ({
                             model: {
                                 hiddenLayers,
                                 sizeDataSet: numTraining,
-                                sizeTestSet: numTest,
                                 learningRate,
                             },
                             override: true,
@@ -243,24 +231,6 @@ export const CreateAndTrainModel = ({
                                 setNumTraining(v as number);
                             }}
                             aria-label="Always visible"
-                            getAriaValueText={valuetext}
-                            valueLabelDisplay="auto"
-                        />
-                    </FlexContainer>
-                    <FlexContainer>
-                        <Label id="continuous-slider" gutterBottom>
-                            Test data
-                        </Label>
-                        <Slider
-                            max={10000}
-                            min={100}
-                            step={100}
-                            value={numTest}
-                            onChange={(_, v) => {
-                                setNumTest(v as number);
-                            }}
-                            aria-label="Always visible"
-                            getAriaValueText={valuetext}
                             valueLabelDisplay="auto"
                         />
                     </FlexContainer>
@@ -282,7 +252,6 @@ export const CreateAndTrainModel = ({
                                 setLearningRate(Math.exp(v as number));
                             }}
                             aria-label="Always visible"
-                            getAriaValueText={valuetext}
                             valueLabelDisplay="off"
                         />
                         <NumberDisplay>{learningRate.toFixed(2)}</NumberDisplay>
@@ -301,8 +270,6 @@ export const CreateAndTrainModel = ({
                 <ButtonContainer>
                     <LargeButton
                         onClick={async () => {
-                            const testData = await api.getTestData(numTest); //.then((testData) => onTestDataLoaded(testData));
-                            onTestDataLoaded(testData);
                             if (running) {
                                 webSocket.current?.close();
                                 setRunning(false);
@@ -317,7 +284,6 @@ export const CreateAndTrainModel = ({
                                             model: {
                                                 hiddenLayers: parseHiddenLayers(layers),
                                                 sizeDataSet: numTraining,
-                                                sizeTestSet: numTest,
                                                 learningRate,
                                             },
                                             override: false,

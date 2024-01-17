@@ -6,3 +6,7 @@ export const SectionBox = styled.div`
     padding: 1rem;
     background-color: #fafafa;
 `;
+
+export const HorizontalLine = styled.hr`
+    border-top: 2px solid lightgray;
+`;

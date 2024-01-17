@@ -19,7 +19,7 @@ fun main() {
 suspend fun trainMnist() {
     val costUpdate: MutableList<CostUpdate> = mutableListOf()
     val trainingData =
-        MNIST.parseTrainingData(10)
+        MNIST.parseData(10, MNIST.Mode.TRAINING)
             .labeledImages
             .map {
                 InputVsOutput(
@@ -53,7 +53,7 @@ fun Byte.asDoubleArray(): DoubleArray {
 }
 
 fun writeMnistToPng() {
-    val trainingData = MNIST.parseTrainingData(60000)
+    val trainingData = MNIST.parseData(60000, MNIST.Mode.TRAINING)
     trainingData.labeledImages
         .forEachIndexed { index, it ->
             val indexFormatted = String.format("%05d", index)
