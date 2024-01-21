@@ -18,11 +18,11 @@ object MNIST {
 //    var currentSize: Int = 0
 
     fun getTestData(size: Int): List<InputVsOutput> {
-        val currentSize = trainingData?.labeledImages?.size ?: 0
+        val currentSize = testData?.labeledImages?.size ?: 0
         if (currentSize < size) {
             loadTestData(size)
         }
-        return trainingData!!.labeledImages
+        return testData!!.labeledImages
             .take(size)
             .map { it.toInputVsOutput() }
     }

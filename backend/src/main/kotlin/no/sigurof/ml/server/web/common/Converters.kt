@@ -4,6 +4,7 @@ import no.sigurof.ml.neuralnetwork.NeuralNetwork
 import no.sigurof.ml.neuralnetwork.PublicConnection
 import no.sigurof.ml.server.web.MatrixDto
 import no.sigurof.ml.server.web.rest.ConnectionDto
+import no.sigurof.ml.utils.ArraySliceMatrix
 import no.sigurof.ml.utils.Matrix
 
 fun NeuralNetwork.toDto(): NeuralNetworkDto {
@@ -23,11 +24,18 @@ private fun PublicConnection.toDto(): ConnectionDto {
     )
 }
 
+private fun ArraySliceMatrix.toDto(): MatrixDto {
+    return MatrixDto(
+        rows = rows,
+        columns = cols,
+        data = data.toList().chunked(cols)
+    )
+}
+
 fun Matrix.toDto(): MatrixDto {
-    val chunkedData: List<List<Double>> = this.data.toList().chunked(this.cols)
     return MatrixDto(
         rows = this.rows,
         columns = this.cols,
-        data = chunkedData
+        data = data.toList().chunked(cols)
     )
 }

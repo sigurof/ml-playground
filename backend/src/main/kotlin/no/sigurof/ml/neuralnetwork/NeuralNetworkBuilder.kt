@@ -57,7 +57,7 @@ class NeuralNetworkBuilder(
     private val dimensionality = connections.sumOf { it.weights + it.biases }
     private val startingCoordinate: DoubleArray =
         startingCoordinate ?: DoubleArray(dimensionality) { Random.nextDouble(-1.0, 1.0) }
-    private val trainingDataChunks: List<List<InputVsOutput>> = trainingData.chunked(100)
+    private val trainingDataChunks: List<List<InputVsOutput>> = trainingData.chunked(20)
 
     constructor(neuralNetwork: NeuralNetwork, trainingData: List<InputVsOutput>) : this(
         hiddenLayerDimensions = neuralNetwork.layerSizes.drop(1).dropLast(1),

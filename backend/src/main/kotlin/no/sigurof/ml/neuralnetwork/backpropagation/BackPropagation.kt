@@ -10,8 +10,8 @@ object BackPropagation {
         trainingData: List<InputVsOutput>,
     ): DoubleArray {
         val gradient = DoubleArray(neuralNetwork.data.size) { _ -> 0.0 }
-        for (inputOutput in trainingData) {
-            val partGradient: DoubleArray = neuralNetwork.calculateGradientForSample(neuralNetwork, inputOutput)
+        for ((index, inputOutput) in trainingData.withIndex()) {
+            val partGradient: DoubleArray = neuralNetwork.calculateGradientForSample(inputOutput)
             gradient.mutablyAddElementwise(partGradient)
         }
         return gradient / trainingData.size.toDouble()
@@ -19,5 +19,7 @@ object BackPropagation {
 }
 
 operator fun Double.times(doubleArray: DoubleArray): DoubleArray = doubleArray.map { it * this }.toDoubleArray()
+
+// operator fun Double.times(doubleArray: DoubleArraySlice): DoubleArray = doubleArray.map { it * this }.toDoubleArray()
 
 private operator fun DoubleArray.div(size: Double): DoubleArray = DoubleArray(this.size) { i -> this[i] / size }

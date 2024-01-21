@@ -39,8 +39,9 @@ object GradientDescent {
         var derivative = gradientFunction.invoke(0, coordinate)
         var steps = 0
         while (true) {
+            println("before yield: steps = $steps, derivative = ${derivative.length()}")
             yield()
-            println("steps = $steps, derivative = ${derivative.length()}")
+            println("after yield: steps = $steps, derivative = ${derivative.length()}")
             emit(steps to coordinate)
             val newCoordinate = DoubleArray(size = coordinate.size)
 
